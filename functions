@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+
+fn-format-size() {
+  declare desc="Format a number of bytes to a human readable format"
+  declare bytes="$1"
+
+  numfmt --to=iec-i --suffix=B --format="%.2f" "$bytes"
+}

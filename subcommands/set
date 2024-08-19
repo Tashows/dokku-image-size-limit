@@ -2,6 +2,7 @@
 set -eo pipefail
 [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_AVAILABLE_PATH/config/functions"
+source "$PLUGIN_AVAILABLE_PATH/image-size-limit/functions"
 
 cmd-image-size-limit-set() {
   declare desc="Set the maximum allowed image size in bytes. Deployments that exceed this limit will be rejected. Default is 2GB."
@@ -36,13 +37,6 @@ cmd-image-size-limit-set() {
   fi
 
   return 0
-}
-
-fn-format-size() {
-  declare desc="Format a number of bytes to a human readable format"
-  declare bytes="$1"
-
-  numfmt --to=iec-i --suffix=B --format="%.2f" "$bytes"
 }
 
 cmd-image-size-limit-set "$@"
