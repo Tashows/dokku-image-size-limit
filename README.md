@@ -26,6 +26,15 @@ $ dokku image-size-limit:help
 ## Usage
 No limit is set by default. When the plugin is enabled, it will just output the image size of an app during deployment.
 
+Once you set a limit, any deployment that exceeds the limit will be rejected.
+You can set a limit for a specific app or globally.
+Apps with no limit set will fall back to the global limit if one is set.
+
+The plugin works by setting and checking the DOKKU_IMAGE_SIZE_LIMIT config variable (either on the app or globally).
+You can achieve the same effect by handling this config variable manually.
+
+### Examples
+
 Set a limit for an app to 2GB:
 ```shell
 dokku image-size-limit:set app_nane 2147483648
