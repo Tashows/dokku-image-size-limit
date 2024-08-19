@@ -1,4 +1,4 @@
 [plugin]
-description = "Limit the size of an app's image, rejecting deployments that exceed the limit."
+description = "Limit allowed app image size during deployment"
 version = "0.1.0"
 [plugin.config]
