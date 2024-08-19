@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
+IMAGE_TAG="$3";
+
+# Get the image size in bytes
+IMAGE_SIZE=$(docker image inspect "$IMAGE_TAG" --format='{{.Size}}')
+
+# Convert size to GB
+IMAGE_SIZE_GB=$(echo "scale=2; $IMAGE_SIZE / (1024 * 1024 * 1024)" | bc)
+
+# Maximum allowed image size in GB
+# Check if there is an ENV variable DOKKU_IMAGE_LIMIT set first, and then fallback to 2.0GB
+MAX_SIZE_GB=${DOKKU_IMAGE_LIMIT:-2.0}
+
+if (( $(echo "$IMAGE_SIZE_GB > $MAX_SIZE_GB" | bc -l) )); then
+  echo "-----> Deployment rejected: App image size is ${IMAGE_SIZE_GB}GB, which exceeds the ${MAX_SIZE_GB}GB limit."
+  exit 1
+fi
+
+echo "-----> App image size is ${IMAGE_SIZE_GB}GB."
+exit 0

@@ -1,0 +1,4 @@
+[plugin]
+name = "Image Size Limit"
+description = "Limit the size of an app's image, rejecting deployments that exceed the limit."
+version = "0.1.0"
