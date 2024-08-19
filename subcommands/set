@@ -10,6 +10,7 @@ cmd-image-size-limit-set() {
 
   [[ "$1" == "image-size-limit:set" ]] || return 1
 
+  local app_or_global="$2"
   local limit="$3"
 
   # if limit is provided, check if it's a number
@@ -18,21 +19,22 @@ cmd-image-size-limit-set() {
     return 1
   fi
 
-  local app_or_global="$2"
-
-  config_set --no-restart "$app_or_global" DOKKU_IMAGE_SIZE_LIMIT="$limit"
-
   if [[ "$app_or_global" == "--global" ]]; then
     if [[ -z "$limit" ]]; then
+      DOKKU_QUIET_OUTPUT=1 config_unset --no-restart "$app_or_global" DOKKU_IMAGE_SIZE_LIMIT
       echo "Global image size limit unset"
       return 0
     fi
+    DOKKU_QUIET_OUTPUT=1 config_set --no-restart "$app_or_global" DOKKU_IMAGE_SIZE_LIMIT="$limit"
     echo "Global image size limit set to $(fn-format-size "$limit")"
   else
+    verify_app_name "$app_or_global"
     if [[ -z "$limit" ]]; then
+      DOKKU_QUIET_OUTPUT=1 config_unset --no-restart "$app_or_global" DOKKU_IMAGE_SIZE_LIMIT
       echo "Image size limit for $app_or_global unset"
       return 0
     fi
+    DOKKU_QUIET_OUTPUT=1 config_set --no-restart "$app_or_global" DOKKU_IMAGE_SIZE_LIMIT="$limit"
     echo "Image size limit for $app_or_global set to $(fn-format-size "$limit")"
   fi
 
