@@ -9,11 +9,6 @@ cmd-image-size-limit-help() {
   local plugin_description="Limit allowed app image size during deployment"
 
   if [[ "$CMD" == "${plugin_name}:help" ]]; then
-    echo -e "Usage: dokku ${plugin_name}[:COMMAND]"
-    echo ''
-    echo "$plugin_description"
-    echo ''
-    echo 'Available commands:'
     fn-help-content | sort | column -c2 -t -s,
   elif [[ $(ps -o command= $PPID) == *"--all"* ]]; then
     fn-help-content
@@ -28,7 +23,7 @@ fn-help-content() {
   declare desc="return help content"
   cat <<help_content
     image-size-limit:report (<app>|--global), Check the current image size limit for an app or globally.
-    image-size-limit:set (<app>|--global) bytes, Set the maximum allowed image size in bytes. Deployments that exceed this limit will be rejected. Default is 2GB.
+    image-size-limit:set (<app>|--global) bytes, Set the maximum allowed image size in bytes. Deployments that exceed this limit will be rejected.
     image-size-limit:help, Show help for the image-size-limit plugin
 help_content
 }
