@@ -9,7 +9,7 @@ BUILDER_TYPE="$1"; APP="$2"; IMAGE_TAG="$3";
 IMAGE_SIZE=$(docker image inspect "$IMAGE_TAG" --format='{{.Size}}')
 
 # Get current image size limit from the app's config keys or the global config
-IMAGE_SIZE_LIMIT=$(config_get "$APP" DOKKU_IMAGE_SIZE_LIMIT || config_get --global DOKKU_IMAGE_SIZE_LIMIT)
+IMAGE_SIZE_LIMIT=$(config_get "$APP" DOKKU_IMAGE_SIZE_LIMIT || config_get --global DOKKU_IMAGE_SIZE_LIMIT || echo "")
 
 # Convert to human readable format, e.g. 1.24GB
 HUMAN_SIZE=$(fn-format-size "$IMAGE_SIZE")
