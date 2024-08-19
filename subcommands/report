@@ -10,6 +10,23 @@ cmd-image-size-limit-report() {
 
   [[ "$1" == "image-size-limit:report" ]] || return 1
 
+  # if second argument is not empty or --global, it must be an app name
+  if [[ -n "$2" && "$2" != "--global" ]]; then
+    verify_app_name "$2"
+    local limit=$(config_get "$2" DOKKU_IMAGE_SIZE_LIMIT)
+    if [[ -z "$limit" ]]; then
+      local global_limit=$(config_get --global DOKKU_IMAGE_SIZE_LIMIT)
+      if [[ -z "$global_limit" ]]; then
+        echo "No limit set for $2 or globally"
+        return 0
+      fi
+      echo "Image size limit for $2 is $(fn-format-size "$global_limit") (global)"
+      return 0
+    fi
+    echo "Image size limit for $2 is $(fn-format-size "$limit")"
+    return 0
+  fi
+
   # find app with longest name to format the table
   local longest_app_name_length=0
   for app in $(dokku_apps); do
