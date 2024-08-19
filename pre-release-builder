@@ -2,18 +2,24 @@
 
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
 source "$PLUGIN_AVAILABLE_PATH/config/functions"
+source "$PLUGIN_AVAILABLE_PATH/image-size-limit/functions"
 BUILDER_TYPE="$1"; APP="$2"; IMAGE_TAG="$3";
 
 # Get the image size in bytes
 IMAGE_SIZE=$(docker image inspect "$IMAGE_TAG" --format='{{.Size}}')
 
 # Get current image size limit from the app's config keys or the global config
-# if none is set, default to 2GB
-IMAGE_SIZE_LIMIT=$(config_get "$APP" DOKKU_IMAGE_SIZE_LIMIT || config_get --global DOKKU_IMAGE_SIZE_LIMIT || echo 2147483648)
+IMAGE_SIZE_LIMIT=$(config_get "$APP" DOKKU_IMAGE_SIZE_LIMIT || config_get --global DOKKU_IMAGE_SIZE_LIMIT)
 
 # Convert to human readable format, e.g. 1.24GB
-HUMAN_SIZE=$(numfmt --to=iec-i --suffix=B --format="%.2f" "$IMAGE_SIZE")
-HUMAN_LIMIT=$(numfmt --to=iec-i --suffix=B --format="%.2f" "$IMAGE_SIZE_LIMIT")
+HUMAN_SIZE=$(fn-format-size "$IMAGE_SIZE")
+
+if [[ -z "$IMAGE_SIZE_LIMIT" ]]; then
+  echo "-----> App image size is ${HUMAN_SIZE}. No image size limit set."
+  exit 0
+fi
+
+HUMAN_LIMIT=$(fn-format-size "$IMAGE_SIZE_LIMIT")
 
 if (( $(echo "$IMAGE_SIZE > $IMAGE_SIZE_LIMIT" | bc -l) )); then
   echo -e "-----> Deployment rejected: App image size is ${HUMAN_SIZE}, which exceeds the limit of ${HUMAN_LIMIT}."
