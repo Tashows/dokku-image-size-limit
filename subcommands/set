@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_AVAILABLE_PATH/config/functions"
+
+cmd-image-size-limit-set() {
+  declare desc="Set the maximum allowed image size in bytes. Deployments that exceed this limit will be rejected. Default is 2GB."
+  declare cmd="image-size-limit:set"
+
+  [[ "$1" == "image-size-limit:set" ]] || return 1
+
+  local limit="$3"
+
+  # if limit is provided, check if it's a number
+  if [[ -n "$limit" && ! "$limit" =~ ^[0-9]+$ ]]; then
+    echo "Limit must be an integer number of bytes"
+    return 1
+  fi
+
+  local app_or_global="$2"
+
+  config_set --no-restart "$app_or_global" DOKKU_IMAGE_SIZE_LIMIT="$limit"
+
+  if [[ "$app_or_global" == "--global" ]]; then
+    if [[ -z "$limit" ]]; then
+      echo "Global image size limit unset"
+      return 0
+    fi
+    echo "Global image size limit set to $(fn-format-size "$limit")"
+  else
+    if [[ -z "$limit" ]]; then
+      echo "Image size limit for $app_or_global unset"
+      return 0
+    fi
+    echo "Image size limit for $app_or_global set to $(fn-format-size "$limit")"
+  fi
+
+  return 0
+}
+
+fn-format-size() {
+  declare desc="Format a number of bytes to a human readable format"
+  declare bytes="$1"
+
+  numfmt --to=iec-i --suffix=B --format="%.2f" "$bytes"
+}
+
+cmd-image-size-limit-set "$@"
