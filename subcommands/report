@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -eo pipefail
+[[ $DOKKU_TRACE ]] && set -x
+source "$PLUGIN_AVAILABLE_PATH/config/functions"
+source "$PLUGIN_AVAILABLE_PATH/image-size-limit/functions"
+
+cmd-image-size-limit-report() {
+  declare desc="Check the current image size limit."
+  declare cmd="image-size-limit:report"
+
+  [[ "$1" == "image-size-limit:report" ]] || return 1
+
+  # find app with longest name to format the table
+  local longest_app_name_length=0
+  for app in $(dokku_apps); do
+    if [[ ${#app} -gt $longest_app_name_length ]]; then
+      longest_app_name_length=${#app}
+    fi
+  done
+
+  # iterate over installed apps and display their DOKKU_IMAGE_SIZE_LIMIT config. If it doesn't exist, display the global limit with a note
+  for app in $(dokku_apps); do
+    local limit=$(config_get "$app" DOKKU_IMAGE_SIZE_LIMIT)
+    if [[ -z "$limit" ]]; then
+      local global_limit=$(config_get --global DOKKU_IMAGE_SIZE_LIMIT)
+      if [[ -z "$global_limit" ]]; then
+        printf "%-${longest_app_name_length}s No limit set\n" "$app"
+        continue
+      fi
+      local global_limit_human=$(fn-format-size "$global_limit")
+      printf "%-${longest_app_name_length}s %-20s\n" "$app" "$global_limit_human (global)"
+    else
+      local limit_human=$(fn-format-size "$limit")
+      printf "%-${longest_app_name_length}s %-20s\n" "$app" "$limit_human"
+    fi
+  done
+}
+
+cmd-image-size-limit-report "$@"
