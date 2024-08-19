@@ -1,22 +1,24 @@
 #!/usr/bin/env bash
 
 set -eo pipefail; [[ $DOKKU_TRACE ]] && set -x
-IMAGE_TAG="$3";
+source "$PLUGIN_AVAILABLE_PATH/config/functions"
+BUILDER_TYPE="$1"; APP="$2"; IMAGE_TAG="$3";
 
 # Get the image size in bytes
 IMAGE_SIZE=$(docker image inspect "$IMAGE_TAG" --format='{{.Size}}')
 
-# Convert size to GB
-IMAGE_SIZE_GB=$(echo "scale=2; $IMAGE_SIZE / (1024 * 1024 * 1024)" | bc)
+# Get current image size limit from the app's config keys or the global config
+# if none is set, default to 2GB
+IMAGE_SIZE_LIMIT=$(config_get "$APP" DOKKU_IMAGE_SIZE_LIMIT || config_get --global DOKKU_IMAGE_SIZE_LIMIT || echo 2147483648)
 
-# Maximum allowed image size in GB
-# Check if there is an ENV variable DOKKU_IMAGE_LIMIT set first, and then fallback to 2.0GB
-MAX_SIZE_GB=${DOKKU_IMAGE_LIMIT:-2.0}
+# Convert to human readable format, e.g. 1.24GB
+HUMAN_SIZE=$(numfmt --to=iec-i --suffix=B --format="%.2f" "$IMAGE_SIZE")
+HUMAN_LIMIT=$(numfmt --to=iec-i --suffix=B --format="%.2f" "$IMAGE_SIZE_LIMIT")
 
-if (( $(echo "$IMAGE_SIZE_GB > $MAX_SIZE_GB" | bc -l) )); then
-  echo "-----> Deployment rejected: App image size is ${IMAGE_SIZE_GB}GB, which exceeds the ${MAX_SIZE_GB}GB limit."
+if (( $(echo "$IMAGE_SIZE > $IMAGE_SIZE_LIMIT" | bc -l) )); then
+  echo -e "-----> Deployment rejected: App image size is ${HUMAN_SIZE}, which exceeds the limit of ${HUMAN_LIMIT}."
   exit 1
 fi
 
-echo "-----> App image size is ${IMAGE_SIZE_GB}GB."
+echo "-----> App image size is ${HUMAN_SIZE}, which is within the limit of ${HUMAN_LIMIT}."
 exit 0
